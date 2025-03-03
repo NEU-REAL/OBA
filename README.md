@@ -15,12 +15,12 @@ and [Renjing Xu](https://scholar.google.com/citations?user=Mu__bJEAAAAJ&hl=en)<s
 <sup>1</sup> Northeastern University, <sup>2</sup> The Hong Kong University of Science and Technology (Guangzhou), <sup>3</sup> Hunan University.        
 (†) Corresponding authors.
 
-![arXiv](https://img.shields.io/badge/arXiv-2502.17941-b31b1b.svg)
+[![arXiv](https://img.shields.io/badge/arXiv-2502.17941-b31b1b.svg)](https://arxiv.org/abs/2502.17941)
 </div>
 
 ## Absract
 
-The increasing complexity and parameter count of Convolutional Neural Networks (CNNs) and Transformers pose challenges in terms of computational efficiency and resource demands. Pruning has been identified as an effective strategy to address these challenges by removing redundant elements such as neurons, channels, or connections, thereby enhancing computational efficiency without heavily compromising performance. This paper builds on the foundational work of Optimal Brain Damage (OBD) by advancing the methodology of parameter importance estimation using the Hessian matrix. Unlike previous approaches that rely on approximations, we introduce Optimal Brain Apoptosis (OBA), a novel pruning method that calculates the Hessian-vector product value directly for each parameter. By decomposing the Hessian matrix across network layers and identifying conditions under which inter-layer Hessian submatrices are non-zero, we propose a highly efficient technique for computing the second-order Taylor expansion of parameters. This approach allows for a more precise pruning process, particularly in the context of CNNs and Transformers, as validated in our experiments including VGG19, ResNet32, ResNet50, and ViT-B/16 on CIFAR10, CIFAR100 and Imagenet datasets.
+The increasing complexity and parameter count of Convolutional Neural Networks (CNNs) and Transformers pose challenges in terms of computational efficiency and resource demands. Pruning has been identified as an effective strategy to address these challenges by removing redundant elements such as neurons, channels, or connections, thereby enhancing computational efficiency without heavily compromising performance. This paper builds on the foundational work of Optimal Brain Damage (OBD) by advancing the methodology of parameter importance estimation using the Hessian matrix. Unlike previous approaches that rely on approximations, we introduce Optimal Brain Apoptosis (OBA), a novel pruning method that calculates the Hessian-vector product value directly for each parameter. By decomposing the Hessian matrix across network layers and identifying conditions under which inter-layer Hessian submatrices are non-zero, we propose a highly efficient technique for computing the second-order Taylor expansion of parameters. This approach allows for a more precise pruning process, particularly in the context of CNNs and Transformers, as validated in our experiments including VGG19, ResNet32, ResNet50, and ViT-B/16 on CIFAR10, CIFAR100, and Imagenet datasets.
 
 ## Overview
 
@@ -35,13 +35,12 @@ Instead of approximating Hessian matrix, we calculate the Hessian-vector product
 ### 1. Environment Setup
 Our code is implemented on Python 3.11 with Pytorch 2.0.1 and CUDA 11.7. To reproduce and use our environment, you can use the following command:
 
-```git clone https://github.com/NEU-REAL/OBA.git```
-
-```cd OBA```
-
-```conda env create -f environment.yaml```
-
-```conda activate oba```
+```
+git clone https://github.com/NEU-REAL/OBA.git
+cd OBA
+conda env create -f environment.yaml
+conda activate oba
+```
 
 ### 2. Dataset Setup
 Please enter the dataset directory to CIFAR10, CIFAR100 and Imagent datasets in the ```dataset.yaml```. CIFAR10 and CIFAR100 can be automatically downloaded if you set a directory without the dataset, while regarding Imagenet you need to manually download it.
@@ -52,7 +51,7 @@ If you want to run the one-shot pruning experiments on CIFAR10 and CIFAR100, an 
 
 ```python train_prune.py --importance_type OBA --dataset cifar10 --model vgg19 --ops_ratios 0.14```
 
-where the ops_ratios is the ratio of the reserved parameters after pruning.
+where ```ops_ratios```represents the ratio of the target reserved FLOPs of the pruned model to that of the unpruned model.
 _________________
 To run the iterative pruning experiments on CIFAR10 and CIFAR100, an example command is as follows:
 
@@ -68,14 +67,16 @@ Then you could use the following example command to finetune the pruned model:
 
 ```python train_imagenet.py --save_dir directory_to_saved_model --model_name pruned_model```
 
-You can refer to ```prune_iamgenet.py``` for the detailed value of ```save_dir``` and ```model_name```.
+You can refer to ```prune_imagenet.py``` for the detailed value of ```save_dir``` and ```model_name```.
 
 _________________
 ### Unstructured Pruning Experiments
 
 An example command is as follows:
 
-```python train_unstructured_prune.py --importance_type OBA --dataset cifar10 --model resnet20```
+```python train_unstructured_prune.py --importance_type OBA --dataset cifar10 --model resnet20 --pruning_ratio 0.1```
+
+in which ```pruning_ratio``` is the same to ```ops_ratio```.
 
 ## Acknowledgement
 
