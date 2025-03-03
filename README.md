@@ -53,7 +53,7 @@ If you want to run the one-shot pruning experiments on CIFAR10 and CIFAR100, an 
 python train_prune.py --importance_type OBA --dataset cifar10 --model vgg19 --ops_ratios 0.14
 ```
 
-where ```ops_ratios```represents the ratio of the target reserved FLOPs of the pruned model to that of the unpruned model.
+where ```ops_ratios``` represents the ratio of the target reserved FLOPs of the pruned model to that of the unpruned model.
 _________________
 To run the iterative pruning experiments on CIFAR10 and CIFAR100, an example command is as follows:
 
