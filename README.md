@@ -49,23 +49,31 @@ Please enter the dataset directory to CIFAR10, CIFAR100 and Imagent datasets in 
 ### Structured Pruning Experiments
 If you want to run the one-shot pruning experiments on CIFAR10 and CIFAR100, an example command is as follows:
 
-```python train_prune.py --importance_type OBA --dataset cifar10 --model vgg19 --ops_ratios 0.14```
+```
+python train_prune.py --importance_type OBA --dataset cifar10 --model vgg19 --ops_ratios 0.14
+```
 
 where ```ops_ratios```represents the ratio of the target reserved FLOPs of the pruned model to that of the unpruned model.
 _________________
 To run the iterative pruning experiments on CIFAR10 and CIFAR100, an example command is as follows:
 
-```python iterative_prune.py --importance_type OBA --dataset cifar10 --model resnet32 --ops_ratios 0.6 0.5 0.4 0.3 0.2 0.1 0.05```
+```
+python iterative_prune.py --importance_type OBA --dataset cifar10 --model resnet32 --ops_ratios 0.6 0.5 0.4 0.3 0.2 0.1 0.05
+```
 
 where the ops_ratios should be decreasing.
 _________________
 To run the one-shot pruning experiments on Imagenet, an example command is as follows:
 
-```python prune_imagenet.py --importance_type OBA --model vit_b_16 --ops_ratios 0.51```
+```
+python prune_imagenet.py --importance_type OBA --model vit_b_16 --ops_ratios 0.51
+```
 
 Then you could use the following example command to finetune the pruned model:
 
-```python train_imagenet.py --save_dir directory_to_saved_model --model_name pruned_model```
+```
+python train_imagenet.py --save_dir directory_to_saved_model --model_name pruned_model
+```
 
 You can refer to ```prune_imagenet.py``` for the detailed value of ```save_dir``` and ```model_name```.
 
@@ -74,7 +82,9 @@ _________________
 
 An example command is as follows:
 
-```python train_unstructured_prune.py --importance_type OBA --dataset cifar10 --model resnet20 --pruning_ratio 0.1```
+```
+python train_unstructured_prune.py --importance_type OBA --dataset cifar10 --model resnet20 --pruning_ratio 0.1
+```
 
 in which ```pruning_ratio``` is the same to ```ops_ratio```.
 
