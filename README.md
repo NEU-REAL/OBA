@@ -7,7 +7,8 @@
 [Jiaxu Wang](https://github.com/Mercerai)<sup>2</sup>,
 [Junjie Jiang](https://scholar.google.com/citations?hl=en&user=IaX-R6MAAAAJ)<sup>1</sup>,
 [Delei Kong](https://scholar.google.com/citations?hl=en&user=c1uix3gAAAAJ)<sup>3</sup>,
-[Chenming Hu](https://github.com/huchenming)<sup>1</sup>
+[Chenming Hu](https://github.com/huchenming)<sup>1</sup>,
+
 [Yuetong Fang](https://scholar.google.com/citations?hl=en&user=zgo7pswAAAAJ)<sup>2</sup>
 and [Renjing Xu](https://scholar.google.com/citations?user=Mu__bJEAAAAJ&hl=en)<sup>2†</sup>
 
