@@ -21,9 +21,9 @@ and [Renjing Xu](https://scholar.google.com/citations?user=Mu__bJEAAAAJ&hl=en)<s
 ## Updates
 ### 🚀 FastOBA – 2025-06-17
 
-- We update FastOBA –– a fast version of OBA that is able to calculate the k-th Taylor term (k=2 corresponds to the Hessian–vector product term):
+- We update FastOBA –– a fast version of OBA that is able to calculate the k-th Taylor term of $\theta_{i_1}$ (k=2 corresponds to the Hessian–vector product term):
 ```math
-\sum_{i_1, \ldots, i_k} \frac{\partial^k L}{\partial \theta_{i_1} \partial \theta_{i_2} \cdots \partial \theta_{i_k}} \delta \theta_{i_1} \delta \theta_{i_2} \cdots \delta \theta_{i_k}.
+\sum_{i_2, \ldots, i_k} \frac{\partial^k L}{\partial \theta_{i_1} \partial \theta_{i_2} \cdots \partial \theta_{i_k}} \delta \theta_{i_1} \delta \theta_{i_2} \cdots \delta \theta_{i_k}.
 ```
 - To use, please set `importance_type` to `fastOBA`.
 
