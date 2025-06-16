@@ -4,6 +4,7 @@ from .batchnorm_scale_pruner import BNScalePruner
 from .group_norm_pruner import GroupNormPruner
 from .growing_reg_pruner import GrowingRegPruner
 from .oba_pruner import OBAPruner
+from.fastoba_pruner import FastOBAPruner
 from .kfac_eigen_pruner import KFACEigenPruner
 from .fisher_diag_pruner import FisherDiagPruner
 from .kfac_pruner import KFACMetaPruner

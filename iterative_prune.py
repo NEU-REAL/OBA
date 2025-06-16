@@ -40,7 +40,7 @@ parser.add_argument('--save_path_prefix', default='checkpoints', type=str, help=
 parser.add_argument('--iters_per_step', default=200, type=int, help='the number of iterative steps for each pruning')
 parser.add_argument('--iterative_steps', default=50, type=int, help='the number of iterative steps for pruning')
 parser.add_argument('--multistep', default=True, type=bool, help='whether to use multistep pruning')
-parser.add_argument('--importance_type', default='Kron-OBS', type=str, choices=['OBA', 'Weight', 'Taylor', 'C-OBS', 'Kron-OBS',
+parser.add_argument('--importance_type', default='OBA', type=str, choices=['OBA', 'fastOBA', 'Weight', 'Taylor', 'C-OBS', 'Kron-OBS',
                                                                               'C-OBD', 'Kron-OBD', 'Eigen'],
                     help='the type of importance')
 parser.add_argument('--ops_ratios', default=[0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05], nargs='+', type=float, help='The target reserved FLOPs ratios')
@@ -53,6 +53,8 @@ parser.add_argument('--upward_delta', default=1., type=float, help='the delta fo
 parser.add_argument('--downward_delta', default=1., type=float, help='the delta for downward direct connectivity importance')
 parser.add_argument('--parallel_delta', default=1., type=float, help='the delta for parallel connectivity importance')
 parser.add_argument('--multivariable', default=True, type=bool, help='whether to use multivariable when calculating the importance scores')
+parser.add_argument('--fastoba_delta', default=1., type=float, help='the delta for fast OBA importance')
+parser.add_argument('--order', default=2, type=int, help='the order of fast OBA')
 args = parser.parse_args()
 args.log_name = "{}_{}".format(args.importance_type, args.model)
 NORMALIZE_DICT = {
@@ -102,7 +104,7 @@ def eval(model, test_loader, device=None):
             pred = out.max(1)[1]
         correct += (pred == target).sum()
         total += len(target)
-    return (correct / total).item()
+    return (correct / total).item(), (loss / total).item()
 
 seed_everything(args.seed)
 save_dir = os.path.join(args.save_path_prefix, args.dataset, args.model, args.log_name)

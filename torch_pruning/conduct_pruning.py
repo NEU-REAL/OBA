@@ -4,6 +4,7 @@ from tqdm import tqdm
 import thop
 from torch.nn.utils import prune
 import time
+from torch.backends.cuda import sdp_kernel
 
 def layerwise_computation(model, input_data):
     _ = model(input_data)
@@ -24,6 +25,7 @@ def layerwise_computation(model, input_data):
 class WrappedPruner:
     def __init__(self, args, train_loader, test_loader, model, example_inputs, ignored_layers, pruning_ratio, device, speed_up=1000, builder=None, base_ops=None, base_params=None):
         self.lr = args.lr
+        self.model_str = args.model
         self.weight_decay = args.weight_decay
         self.importance_type = args.importance_type
         self.train_loader = train_loader
@@ -58,6 +60,23 @@ class WrappedPruner:
                 other_unit_weight=args.other_unit_weight
             )
             pruner.register_hooks()
+        elif args.importance_type == "fastOBA":
+            imp = tp.fastoba_importance.FastOBAImportance(normalizer=args.normalizer, multivariable=args.multivariable)
+            # imp = tp.oba_importance.HessianWeightImportance(normalizer=args.normalizer, multivariable=args.multivariable)
+            pruner = tp.pruner.FastOBAPruner(
+                model,
+                example_inputs,
+                global_pruning=True,
+                importance=imp,
+                iterative_steps=args.iterative_steps,
+                pruning_ratio=pruning_ratio,
+                pruning_ratio_dict={},
+                max_pruning_ratio=args.max_pruning_ratio,
+                ignored_layers=ignored_layers,
+                unwrapped_parameters=[],
+                delta=args.fastoba_delta,
+                sl_lr=args.sl_lr
+            )
         elif "OBD" in args.importance_type or "OBS" in args.importance_type or "Eigen" in args.importance_type:
             imp = tp.kfac_importance.PostLayerKFACImportance(normalizer=args.normalizer, multivariable=args.multivariable)
             if args.importance_type == "C-OBD":
@@ -123,7 +142,7 @@ class WrappedPruner:
         self.pruner = pruner
         self.finish_prune = False
 
-    def iterative_prune_step(self):
+    def iterative_prune_step(self, order=2):
         ## prune
         # self.pruner.register_hooks()
         device = self.device
@@ -136,11 +155,17 @@ class WrappedPruner:
         if "OBD" in self.importance_type or "OBS" in self.importance_type or "Eigen" in self.importance_type:
             self.pruner.obtain_importance(self.train_loader, cross_entropy, device, iter_steps=self.iters_per_step)
         else:
+            if self.importance_type == "fastOBA":
+                self.pruner.init_target_parameters()
             for img, label in tqdm(self.train_loader, total=self.iters_per_step - 1):
                 prune_iter += 1
                 img = img.to(device)
                 label = label.to(device)
-                loss = cross_entropy(self.model(img), label)
+                if "vit" in self.model_str:
+                    with sdp_kernel(enable_math=True, enable_flash=False, enable_mem_efficient=False):
+                        loss = cross_entropy(self.model(img), label)
+                else:
+                    loss = cross_entropy(self.model(img), label)
                 if self.importance_type == "OBA":
                     optimizer.zero_grad()
                     self.pruner.obtain_importance(loss)
@@ -151,6 +176,9 @@ class WrappedPruner:
                             del module.Y
                             del module.grad_input
                             del module.grad_output
+                elif self.importance_type == "fastOBA":
+                    optimizer.zero_grad()
+                    self.pruner.obtain_importance(loss, order)
                 else:
                     loss.backward()
                 if prune_iter >= self.iters_per_step:
@@ -174,6 +202,8 @@ class WrappedPruner:
         if self.importance_type == "OBA":
             self.pruner.update_dependency_graph(self.example_inputs)
             self.pruner.group_importances = self.pruner.initialize_importance()
+        if self.importance_type == "fastOBA":
+            self.pruner.group_importances = self.pruner.initialize_importance()
         if "OBD" in self.importance_type or "OBS" in self.importance_type or "Eigen" in self.importance_type:
             self.pruner.importances = {}
         if self.pruner.current_step == self.pruner.iterative_steps or current_speed_up >= self.speed_up:
@@ -184,7 +214,7 @@ class WrappedPruner:
                 del module.Y
         return ops_percent, params_percent#, t2 - t1, t3 - t2
 
-    def onepass_prune_step(self, ops_ratio):
+    def onepass_prune_step(self, ops_ratio, order=2):
         ## prune
         device = self.device
         self.model.train()
@@ -210,6 +240,9 @@ class WrappedPruner:
                             del module.Y
                             del module.grad_input
                             del module.grad_output
+                elif self.importance_type == "fastOBA":
+                    optimizer.zero_grad()
+                    self.pruner.obtain_importance(loss, order)
                 else:
                     loss.backward()
                 if prune_iter >= self.iters_per_step:
@@ -247,7 +280,7 @@ class WrappedPruner:
                 del module.Y
         return ops_percent, params_percent
 
-    def onepass_unstructured_prune_step(self, pruning_ratio):
+    def onepass_unstructured_prune_step(self, pruning_ratio, order=2):
         for module in self.model.modules():
             if hasattr(module, "weight_mask"):
                 module.weight_orig.data = module.weight_mask * module.weight_orig.data
@@ -266,7 +299,11 @@ class WrappedPruner:
             prune_iter += 1
             img = img.to(device)
             label = label.to(device)
-            loss = cross_entropy(self.model(img), label)
+            if "vit" in self.model_str:
+                with sdp_kernel(enable_math=True, enable_flash=False, enable_mem_efficient=False):
+                    loss = cross_entropy(self.model(img), label)
+            else:
+                loss = cross_entropy(self.model(img), label)
             if self.importance_type == "OBA":
                 optimizer.zero_grad()
                 self.pruner.obtain_importance(loss)
@@ -277,6 +314,9 @@ class WrappedPruner:
                         del module.Y
                         del module.grad_input
                         del module.grad_output
+            elif self.importance_type == "fastOBA":
+                self.model.zero_grad()
+                self.pruner.obtain_importance(loss, order)
             else:
                 loss.backward()
             if prune_iter > self.iters_per_step:

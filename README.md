@@ -18,6 +18,19 @@ and [Renjing Xu](https://scholar.google.com/citations?user=Mu__bJEAAAAJ&hl=en)<s
 [![arXiv](https://img.shields.io/badge/arXiv-2502.17941-b31b1b.svg)](https://arxiv.org/abs/2502.17941)
 </div>
 
+## Updates
+### 🚀 FastOBA – 2025-06-17
+
+- We update FastOBA –– a fast version of OBA that is able to calculate the k-th Taylor term (k=2 corresponds to the Hessian–vector product term): $$
+\sum_{i_1, \ldots, i_k} \frac{\partial^k L}{\partial \theta_{i_1} \partial \theta_{i_2} \cdots \partial \theta_{i_k}} \delta \theta_{i_1} \delta \theta_{i_2} \cdots \delta \theta_{i_k}.
+$$
+- To use, please set `importance_type` to `fastOBA`.
+
+### 📦 OBA – 2025-04-02
+
+- We release the codebase of OBA.
+
+
 ## Absract
 
 The increasing complexity and parameter count of Convolutional Neural Networks (CNNs) and Transformers pose challenges in terms of computational efficiency and resource demands. Pruning has been identified as an effective strategy to address these challenges by removing redundant elements such as neurons, channels, or connections, thereby enhancing computational efficiency without heavily compromising performance. This paper builds on the foundational work of Optimal Brain Damage (OBD) by advancing the methodology of parameter importance estimation using the Hessian matrix. Unlike previous approaches that rely on approximations, we introduce Optimal Brain Apoptosis (OBA), a novel pruning method that calculates the Hessian-vector product value directly for each parameter. By decomposing the Hessian matrix across network layers and identifying conditions under which inter-layer Hessian submatrices are non-zero, we propose a highly efficient technique for computing the second-order Taylor expansion of parameters. This approach allows for a more precise pruning process, particularly in the context of CNNs and Transformers, as validated in our experiments including VGG19, ResNet32, ResNet50, and ViT-B/16 on CIFAR10, CIFAR100, and Imagenet datasets.

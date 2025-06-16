@@ -34,10 +34,10 @@ parser.add_argument("--master_port", default="12221")
 parser.add_argument('--save_path_prefix', default='checkpoints', type=str, help='the prefix of save path')
 parser.add_argument('--iters_per_step', default=350, type=int, help='the number of iterative steps for each pruning')
 parser.add_argument('--iterative_steps', default=50, type=int, help='the number of iterative steps for pruning')
-parser.add_argument('--importance_type', default='OBA', type=str, choices=['OBA', 'Weight', 'Taylor', 'C-OBS', 'Kron-OBS',
+parser.add_argument('--importance_type', default='OBA', type=str, choices=['OBA', 'fastOBA', 'Weight', 'Taylor', 'C-OBS', 'Kron-OBS',
                                                                               'C-OBD', 'Kron-OBD', 'Eigen'],
                     help='the type of importance')
-parser.add_argument('--max_ops_ratios', default=0.95, type=float, help='the max channel sparsity')
+parser.add_argument('--max_pruning_ratio', default=0.95, type=float, help='the max channel sparsity')
 parser.add_argument('--normalizer', default="max", type=str, help='the normalizer of importance scores of each layer')
 parser.add_argument('--self_unit_weight', default=False, type=bool, help='whether to use self unit weight')
 parser.add_argument('--other_unit_weight', default=False, type=bool, help='whether to use other unit weight')
@@ -46,6 +46,8 @@ parser.add_argument('--upward_delta', default=1., type=float, help='the delta fo
 parser.add_argument('--downward_delta', default=1., type=float, help='the delta for downward direct connectivity importance')
 parser.add_argument('--parallel_delta', default=1., type=float, help='the delta for parallel connectivity importance')
 parser.add_argument('--multistep', default=True, type=bool, help='multistep pruning')
+parser.add_argument('--fastoba_delta', default=1., type=float, help='the delta for fast OBA importance')
+parser.add_argument('--order', default=2, type=int, help='the order of fast OBA')
 parser.add_argument('--ops_ratios', default=0.51, nargs='+', type=float, help='The target FLOPs ratios')
 parser.add_argument('--multivariable', default=True, type=bool, help='whether to use multivariable when calculating the importance scores')
 args = parser.parse_args()
@@ -147,13 +149,13 @@ if __name__ == "__main__":
     print(save_path)
     while prune_step < len(ops_ratio_list):
         if args.multistep:
-            ops_percent, params_percent = wrapped_pruner.iterative_prune_step()
+            ops_percent, params_percent = wrapped_pruner.iterative_prune_step(args.order)
             wrapped_pruner.pruner.remove_hooks()
             wrapped_pruner = tp.WrappedPruner(args, train_loader, test_loader, model, example_inputs, ignored_layers,
                                               1 - target_ops_ratio * 0.9, device, base_ops=wrapped_pruner.base_ops, base_params=wrapped_pruner.base_params)
             print("ops_percent", ops_percent)
         else:
-            ops_percent, params_percent = wrapped_pruner.onepass_prune_step(ops_ratio_list[prune_step])
+            ops_percent, params_percent = wrapped_pruner.onepass_prune_step(ops_ratio_list[prune_step], args.order)
         if wrapped_pruner.pruner.current_step >= args.iterative_steps - 10:
             break
         prune_ratio = ops_percent

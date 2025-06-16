@@ -40,7 +40,7 @@ parser.add_argument('--save_path_prefix', default='checkpoints', type=str, help=
 parser.add_argument('--iters_per_step', default=200, type=int, help='the number of iterative steps for each pruning')
 parser.add_argument('--iterative_steps', default=50, type=int, help='the number of iterative steps for pruning')
 parser.add_argument('--multistep', default=True, type=bool, help='whether to use multistep pruning')
-parser.add_argument('--importance_type', default='OBA', type=str, choices=['OBA', 'Weight', 'Taylor', 'C-OBS', 'Kron-OBS',
+parser.add_argument('--importance_type', default='OBA', type=str, choices=['OBA', 'fastOBA', 'Weight', 'Taylor', 'C-OBS', 'Kron-OBS',
                                                                               'C-OBD', 'Kron-OBD', 'Eigen'],
                     help='the type of importance')
 parser.add_argument('--ops_ratios', default=0.14, nargs='+', type=float, help='The target FLOPs ratios')
@@ -52,6 +52,8 @@ parser.add_argument('--delta', default=0., type=float, help='the delta for OBA')
 parser.add_argument('--upward_delta', default=1., type=float, help='the delta for upward direct connectivity importance')
 parser.add_argument('--downward_delta', default=1., type=float, help='the delta for downward direct connectivity importance')
 parser.add_argument('--parallel_delta', default=1., type=float, help='the delta for parallel connectivity importance')
+parser.add_argument('--fastoba_delta', default=1., type=float, help='the delta for fast OBA importance')
+parser.add_argument('--order', default=2, type=int, help='the order of the fast OBA')
 parser.add_argument('--multivariable', default=True, type=bool, help='whether to use multivariable when calculating the importance scores')
 args = parser.parse_args()
 args.log_name = "Structured{}".format(args.importance_type)
@@ -102,7 +104,7 @@ def eval(model, test_loader, device=None):
             pred = out.max(1)[1]
         correct += (pred == target).sum()
         total += len(target)
-    return (correct / total).item()
+    return (correct / total).item(), (loss / total).item()
 
 seed_everything(args.seed)
 save_dir = os.path.join(args.save_path_prefix, args.dataset, args.model, args.log_name)
@@ -247,9 +249,9 @@ wrapped_pruner = tp.WrappedPruner(args, train_loader, test_loader, model, exampl
                                               1 - ops_ratio_list[prune_step] * 0.9, device, builder=builder)
 while prune_step < len(ops_ratio_list):
     if args.multistep:
-        ops_percent, params_percent = wrapped_pruner.iterative_prune_step()
+        ops_percent, params_percent = wrapped_pruner.iterative_prune_step(args.order)
     else:
-        ops_percent, params_percent = wrapped_pruner.onepass_prune_step(ops_ratio_list[prune_step])
+        ops_percent, params_percent = wrapped_pruner.onepass_prune_step(ops_ratio_list[prune_step], args.order)
     ## test stage
     test_accuracy, test_loss = eval(model, test_loader, device=device)
     prune_ratio = ops_percent
